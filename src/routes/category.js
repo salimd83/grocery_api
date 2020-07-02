@@ -6,22 +6,35 @@ const router = express.Router();
 module.exports = (categories) => {
   router.get("/categories", async (req, res) => {
     try {
-      res.send(await categories.get());
+      res.send(await categories.all());
     } catch (e) {
-      res
-        .status(500)
-        .send({ msg: "Error retrieving categories", error: e.message });
+      next({status: 500, msg: "Error retrieving categories", e});
     }
   });
+  // get top categories
+  router.get("/categories/top", async (req, res) => {
+    try {
+        res.send(await categories.top());
+    } catch (e) {
+      next({status: 500, msg: "Error occured", e});
+    }
+  });
+
+  // get children
+  router.get("/categories/:id", async (req, res) => {
+    try {
+        res.send(await categories.children(req.params.id));
+    } catch (e) {
+      next({status: 500, msg: "Error occured", e});
+    }
+  });
+
   // create categories
   router.post("/categories", async (req, res) => {
     try {
       res.status(201).send(await categories.create(req.body));
     } catch (e) {
-      res.status(500).send({
-        msg: "Error creating categories",
-        error: e.message,
-      });
+      next({status: 500, msg: "Error creating categories", e});
     }
   });
 
@@ -30,20 +43,16 @@ module.exports = (categories) => {
       await categories.update(req.params.id, req.body);
       res.send();
     } catch (e) {
-      console.log(e);
-      res
-        .status(500)
-        .send({ msg: "Error updating category", error: e.message });
+      next({status: 500, msg: "Error updating category", e});
     }
   });
 
-  router.delete("/categories/:id", async (req, res) => {
+  router.delete("/categories/:id", async (req, res, next) => {
     try {
       await categories.delete(req.params.id);
       res.send();
     } catch (e) {
-      console.log(e);
-      res.status(404).send({ msg: "category not found", error: e.message });
+      next({status: 500, msg: "Error deleting category", e})
     }
   });
 

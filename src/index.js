@@ -4,6 +4,7 @@ const connect = require('../db/connect');
 const { port } = require('../config');
 const categoriesRouter = require('./routes/category');
 const categoriesModel = require('./models/categories');
+const handleError = require('./error');
 
 const app = express();
 app.use(cors());
@@ -15,5 +16,6 @@ app.get('/', (req, res) => {
 
 connect(categories => {
     app.use(categoriesRouter(categoriesModel(categories)));
+    app.use(handleError);
     app.listen(port, () => console.log('App is listening on port 3000'));
 })
