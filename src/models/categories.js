@@ -41,6 +41,28 @@ module.exports = (catCollection) => {
         }
       );
     },
+    async addImage(id, image) {
+      return await catCollection.updateOne(
+        {
+          _id: ObjectId(id),
+        },
+        {
+          $set: { image },
+          $currentDate: { lastModified: true },
+        }
+      );
+    },
+    async deleteImage(id) {
+      return await catCollection.updateOne(
+        {
+          _id: ObjectId(id),
+        },
+        {
+          $unset: { image: "" },
+          $currentDate: { lastModified: true },
+        }
+      );
+    },
     async delete(id) {
       return await catCollection.deleteOne({
         _id: ObjectId(id),

@@ -5,5 +5,6 @@ const dbName = process.env.NODE_ENV === 'test' ? process.env.MONGO_DB_NAME_TEST 
 module.exports = {
     port: process.env.NODE_ENV === 'test' ? 3001 : process.env.PORT,
     dbName,
+    host: process.env.BASE_URL,
     dbUrl: process.env.MONGODB_URL + `/${dbName}`
 }
