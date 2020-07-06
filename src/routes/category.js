@@ -4,7 +4,7 @@ const router = express.Router();
 // params categories is the model
 // the function will return the router
 module.exports = (categories) => {
-  router.get("/categories", async (req, res) => {
+  router.get("/categories", async (req, res, next) => {
     try {
       res.send(await categories.all());
     } catch (e) {
@@ -12,7 +12,7 @@ module.exports = (categories) => {
     }
   });
   // get top categories
-  router.get("/categories/top", async (req, res) => {
+  router.get("/categories/top", async (req, res, next) => {
     try {
         res.send(await categories.top());
     } catch (e) {
@@ -21,7 +21,7 @@ module.exports = (categories) => {
   });
 
   // get children
-  router.get("/categories/:id", async (req, res) => {
+  router.get("/categories/:id", async (req, res, next) => {
     try {
         res.send(await categories.children(req.params.id));
     } catch (e) {
@@ -30,7 +30,7 @@ module.exports = (categories) => {
   });
 
   // create categories
-  router.post("/categories", async (req, res) => {
+  router.post("/categories", async (req, res, next) => {
     try {
       res.status(201).send(await categories.create(req.body));
     } catch (e) {
@@ -38,7 +38,7 @@ module.exports = (categories) => {
     }
   });
 
-  router.put("/categories/:id", async (req, res) => {
+  router.put("/categories/:id", async (req, res, next) => {
     try {
       await categories.update(req.params.id, req.body);
       res.send();
