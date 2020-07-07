@@ -76,7 +76,7 @@ module.exports = (categories) => {
   router.delete("/categories/:id", async (req, res, next) => {
     try {
       const result = await categories.children(req.params.id);
-      fs.unlinkSync(`./public/images/${result.image.substr(result.image.lastIndexOf('/') + 1)}`)
+      if(result.image) fs.unlinkSync(`./public/images/${result.image.substr(result.image.lastIndexOf('/') + 1)}`)
       await categories.delete(req.params.id);
       res.send();
     } catch (e) {
