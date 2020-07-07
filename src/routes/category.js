@@ -1,22 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const fs = require('fs');
-const multer = require("multer");
-const sharp = require("sharp");
 const {host} = require('../../config');
-
-// setting up the middleware
-const upload = multer({
-  limits: {
-    filesize: 2 * 1024 * 1024,
-    fileFilter(req, file, cb) {
-      if(!file.originalname.match(/\.(jpeg|jpg|png|gif)$/)) {
-        return cb(new Error("The uploaded file is not an image"));
-      }
-      cb(null, true)
-    }
-  }
-});
+const {upload, resize} = require('../middlewares/uploadImages');
 
 // params categories is the model
 // the function will return the router
@@ -67,11 +53,9 @@ module.exports = (categories) => {
   // update image
   router.put("/categories/:id/image", upload.single('image'), async (req, res, next) => {
     try {
-      const filename = `${req.params.id}.${req.file.mimetype.substr(req.file.mimetype.lastIndexOf('/') + 1)}`;
-      await sharp(req.file.buffer)
-        .resize({ width: 250 })
-        .toFile(`./public/images/${filename}`);
-      await categories.addImage(req.params.id, `${host}/images/${filename}`);
+      const result = await resize(req, 250, './public/images');
+      console.log(result)
+      await categories.addImage(req.params.id, `${host}/images/${req.params.id}.${result.format}`);
       res.send()
     } catch (e) {
       next({status: 500, msg: "Error updating image category", e});
@@ -91,6 +75,8 @@ module.exports = (categories) => {
 
   router.delete("/categories/:id", async (req, res, next) => {
     try {
+      const result = await categories.children(req.params.id);
+      fs.unlinkSync(`./public/images/${result.image.substr(result.image.lastIndexOf('/') + 1)}`)
       await categories.delete(req.params.id);
       res.send();
     } catch (e) {
