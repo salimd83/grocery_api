@@ -15,10 +15,11 @@ const upload = multer({
 });
 
 async function resize(req, width, path) {
-  const filename = `${req.params.id}.${mimeExt(req.file.mimetype)}`;
-  return await sharp(req.file.buffer)
+  const filename = `${req.params.id}${Date.now()}.${mimeExt(req.file.mimetype)}`;
+  const res =  await sharp(req.file.buffer)
     .resize({ width })
     .toFile(`${path}/${filename}`);
+  return {...res, filename}
 }
 
 function mimeExt(mime) {

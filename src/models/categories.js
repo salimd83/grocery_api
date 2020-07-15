@@ -1,24 +1,26 @@
 const ObjectId = require("mongodb").ObjectID;
 
-module.exports = (catCollection) => {
+module.exports = (db) => {
+  const cl = createCategoryCollection(db);
   return {
+    collection: cl,
     async all() {
-      return await catCollection.find().toArray();
+      return await cl.find().toArray();
     },
     async top() {
-      return await catCollection
+      return await cl
         .find({
           parent: { $exists: false },
         })
         .toArray();
     },
     async children(id) {
-      const children = await catCollection
+      const children = await cl
         .find({
           parent: id,
         })
         .toArray();
-      const parent = await catCollection.findOne({
+      const parent = await cl.findOne({
         _id: ObjectId(id),
       });
       return {
@@ -27,11 +29,11 @@ module.exports = (catCollection) => {
       };
     },
     async create(cat) {
-      const res = await catCollection.insertOne(cat);
+      const res = await cl.insertOne(cat);
       return res.insertedId;
     },
     async update(id, cat) {
-      return await catCollection.updateOne(
+      return await cl.updateOne(
         {
           _id: ObjectId(id),
         },
@@ -42,7 +44,7 @@ module.exports = (catCollection) => {
       );
     },
     async addImage(id, image) {
-      return await catCollection.updateOne(
+      return await cl.updateOne(
         {
           _id: ObjectId(id),
         },
@@ -53,7 +55,7 @@ module.exports = (catCollection) => {
       );
     },
     async deleteImage(id) {
-      return await catCollection.updateOne(
+      return await cl.updateOne(
         {
           _id: ObjectId(id),
         },
@@ -64,9 +66,13 @@ module.exports = (catCollection) => {
       );
     },
     async delete(id) {
-      return await catCollection.deleteOne({
+      return await cl.deleteOne({
         _id: ObjectId(id),
       });
     },
   };
 };
+
+function createCategoryCollection(db) {
+  return db.collection('categories')
+}

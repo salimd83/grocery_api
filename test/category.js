@@ -1,51 +1,10 @@
 const request = require("supertest");
 const app = require("../src/index");
-const { ObjectID } = require("mongodb");
 const fs = require("fs");
-const connect = require("../db/connect");
-const categoriesRouter = require("../src/routes/category");
-const categoriesModel = require("../src/models/categories");
-const handleError = require("../src/error");
+const { cat1, cat2, newCat, sampleImg } = require("./seeds");
+const { filenameFromUrl } = require("../src/function");
 
-var catCollection;
-
-beforeAll(async () => {
-  process.env.NODE_ENV = "test";
-  return connect((categories) => {
-    catCollection = categories;
-    app.use(categoriesRouter(categoriesModel(categories)));
-    app.use(handleError);
-  });
-});
-
-const cat1 = {
-  _id: ObjectID(),
-  name: "cat 1",
-};
-const cat2 = {
-  _id: ObjectID(),
-  name: "cat 2",
-};
-const cat3 = {
-  _id: ObjectID(),
-  name: "cat 3",
-  parent: cat1._id.toString(),
-};
-const newCat = {
-  name: "cat 4",
-  parent: cat1._id.toString(),
-};
-
-beforeEach(() => {
-  seedDb(catCollection);
-});
-
-const seedDb = (catCollection) => {
-  catCollection.deleteMany();
-  catCollection.insertMany([cat1, cat2, cat3]);
-};
-
-describe("CRUD categories", () => {
+const categoryTestCases = describe("CRUD categories", () => {
   it("should retrieve categories with no child", async () => {
     const res = await request(app).get("/categories/top");
     expect(res.status).toBe(200);
@@ -60,18 +19,20 @@ describe("CRUD categories", () => {
   it("should add image", async () => {
     const res = await request(app)
       .put(`/categories/${cat1._id}/image`)
-      .attach("image", "./test/assets/bread.png");
+      .attach("image", sampleImg);
     expect(res.status).toBe(200);
-    expect(fs.existsSync(`./public/images/${cat1._id}.png`)).toBe(true);
-    fs.unlinkSync(`./public/images/${cat1._id}.png`);
+    expect(
+      fs.existsSync(`./public/images/${filenameFromUrl(res.body.image)}`)
+    ).toBe(true);
+    fs.unlinkSync(`./public/images/${filenameFromUrl(res.body.image)}`);
   });
   it("should remove image", async () => {
-    const filename = `./public/images/${cat1._id}.png`;
-    fs.copyFileSync("./test/assets/bread.png", filename);
+    const filename = `./public/images/${filenameFromUrl(cat2.image)}`;
+    fs.copyFileSync(sampleImg, filename);
     try {
       const res = await request(app)
         .delete(`/categories/${cat1._id}/image`)
-        .send({ ext: "png" });
+        .send({ image: cat2.image });
       expect(res.status).toBe(200);
       expect(fs.existsSync(filename)).toBe(false);
     } catch (e) {
@@ -91,3 +52,5 @@ describe("CRUD categories", () => {
     expect(res2.body.parent).toEqual(cat1._id.toString());
   });
 });
+
+module.exports = categoryTestCases;

@@ -1,17 +1,17 @@
-const MongoClient = require('mongodb').MongoClient;
-const { dbUrl, dbName } = require('../config');
+const MongoClient = require("mongodb").MongoClient;
+const { dbUrl, dbName } = require("../config");
 
-const client = new MongoClient(dbUrl, { useUnifiedTopology: true })
+const client = new MongoClient(dbUrl, { useUnifiedTopology: true });
 
-async function connect(cb) {
-    try {
-        await client.connect();
-        const db = client.db(dbName);
-        const categories = db.collection('categories');
-        cb(categories);
-    } catch (e) {
-        console.log('error connecting to database', e)
-    }
-};
+const connect = new Promise(async (resolve, reject) => {
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    resolve({ db, client });
+  } catch (e) {
+    console.log("error connecting to database", e);
+    reject(e);
+  }
+});
 
 module.exports = connect;

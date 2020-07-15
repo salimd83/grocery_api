@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const {host} = require('../../config');
 const {upload, resize} = require('../middlewares/uploadImages');
+const { filenameFromUrl } = require('../function');
 
 // params categories is the model
 // the function will return the router
@@ -53,19 +54,19 @@ module.exports = (categories) => {
   // update image
   router.put("/categories/:id/image", upload.single('image'), async (req, res, next) => {
     try {
-      const result = await resize(req, 250, './public/images');
-      console.log(result)
-      await categories.addImage(req.params.id, `${host}/images/${req.params.id}.${result.format}`);
-      res.send()
+      const r = await resize(req, 250, './public/images');
+      await categories.addImage(req.params.id, `${host}/images/${r.filename}`);
+      res.send({image: `${host}/images/${r.filename}`})
     } catch (e) {
-      next({status: 500, msg: "Error updating image category", e});
+      next({status: 500, msg: "Error updating category image", e});
     }
   })
 
   // delete image
   router.delete("/categories/:id/image", async (req, res, next) => {
     try {
-      fs.unlinkSync(`./public/images/${req.params.id}.${req.body.ext}`);
+      const r = await categories.children(req.params.id)
+      if(r.image) fs.unlinkSync(`./public/images/${filenameFromUrl(r.image)}`);
       await categories.deleteImage(req.params.id);
       res.send();
     } catch (e) {
@@ -75,8 +76,8 @@ module.exports = (categories) => {
 
   router.delete("/categories/:id", async (req, res, next) => {
     try {
-      const result = await categories.children(req.params.id);
-      if(result.image) fs.unlinkSync(`./public/images/${result.image.substr(result.image.lastIndexOf('/') + 1)}`)
+      const r = await categories.children(req.params.id);
+      if(r.image) fs.unlinkSync(`./public/images/${filenameFromUrl(r.image)}`)
       await categories.delete(req.params.id);
       res.send();
     } catch (e) {

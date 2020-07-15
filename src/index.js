@@ -6,18 +6,18 @@ const { server, setRoutes } = require("./setup");
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.send({ text: "Hello from express" });
 });
 
-if (process.env.NODE_ENV === "test")
-  server(app)
-else
-  connect((categories) => {
-    setRoutes(app, categories);
-    server(app);
-  });
+if (process.env.NODE_ENV !== "test")
+  connect
+    .then(({ db }) => {
+      setRoutes(app, db);
+      server(app);
+    })
+    .catch((e) => console.log(e));
 
 module.exports = app;
